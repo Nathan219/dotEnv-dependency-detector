@@ -17,7 +17,7 @@ if (process.argv.length < 4) {
     isInputaDir = true;
     var fileList = fs.readdirSync(chosenFilePath);
     fileList.forEach(function(file) {
-      if (file.indexOf('.env') === 0 && file.indexOf('_fixed') < 0) {
+      if (file.indexOf('.env') === 0 && file.indexOf('.backup') < 0) {
         loadVariablesFromFile(chosenFilePath + "/" + file, file);
       }
     });
@@ -82,12 +82,22 @@ function saveVariablesToFile(filepath) {
           finishedLines[envFile].push(linesToWrite[envFile][string]);
         }
       }
-      var newFilename = filepath + ((isInputaDir) ? "/" + envFile : '')  + "_fixed";
-      var err = fs.writeFileSync(newFilename, finishedLines[envFile].join("\n"));
+      var filename = filepath + ((isInputaDir) ? "/" + envFile : '');
+      var newFilename = filename + ".backup";
+      // Rename the old file as a backup
+      var err = fs.renameSync(filename, newFilename);
+      if (err) {
+        console.log(err);
+        continue;
+      } else {
+        console.log("The file was saved as " + newFilename);
+      }
+      // Now replace the old file with the slimmed down one
+      err = fs.writeFileSync(filename, finishedLines[envFile].join("\n"));
       if (err) {
         console.log(err);
       } else {
-        console.log("The file was saved as " + newFilename);
+        console.log("The file was saved as " + filename);
       }
     }
   }
